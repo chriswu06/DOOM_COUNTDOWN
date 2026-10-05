@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Countdown to 417 Exam 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;900&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: one furnace-lit screen. Molten digits centered on a smoldering ground, embers rising behind. Single dark theme by choice. */
+  :root {
+    --ground: #160807;
+    --ground-2: #2a0d09;
+    --ember: #ff6a1a;
+    --molten: #ffb347;
+    --ash: #c9a89a;
+    --soot: #6e4a40;
+    --display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: radial-gradient(120% 80% at 50% 110%, var(--ground-2), var(--ground) 65%) fixed, var(--ground);
+    color: var(--ash);
+    font-family: var(--mono);
+    overflow-x: hidden;
+  }
+  canvas#embers { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  main {
+    position: relative; z-index: 1;
+    min-height: 100%;
+    box-sizing: border-box;
+    padding-inline: 16px; padding-block: 48px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 28px; text-align: center;
+  }
+  .eyebrow {
+    font-size: 0.8rem; letter-spacing: 0.32em; text-transform: uppercase; color: var(--soot);
+  }
+  .eyebrow b { color: var(--ember); font-weight: 600; }
+  h1 {
+    margin: 0;
+    font-family: var(--display); font-weight: 900; text-transform: uppercase;
+    font-size: clamp(2.6rem, 9vw, 6rem); line-height: 0.9; letter-spacing: 0.01em;
+    color: var(--molten);
+    text-wrap: balance;
+  }
+  .clock {
+    display: grid; grid-template-columns: repeat(4, auto); gap: clamp(8px, 3vw, 40px);
+    align-items: end; justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .unit { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+  .num {
+    font-family: var(--display); font-weight: 900;
+    font-size: clamp(3.6rem, 16vw, 11rem); line-height: 0.85;
+    color: var(--molten);
+    text-shadow: 0 0 18px rgba(255, 106, 26, 0.55), 0 0 60px rgba(255, 106, 26, 0.25);
+  }
+  .unit.secs .num { color: var(--ember); }
+  .label { font-size: 0.72rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--soot); }
+  .when {
+    display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; line-height: 1.5;
+  }
+  .when strong { color: var(--ash); font-weight: 600; }
+  .when .local { color: var(--soot); font-size: 0.8rem; }
+  .bar { width: min(560px, 100%); height: 4px; background: rgba(110, 74, 64, 0.35); border-radius: 2px; overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--ember), var(--molten)); box-shadow: 0 0 12px var(--ember); }
+  .done .clock, .done .bar { display: none; }
+  @media (max-width: 420px) {
+    .clock { grid-template-columns: repeat(2, auto); row-gap: 20px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .unit.secs .num { animation: throb 1s ease-in-out infinite; }
+    @keyframes throb { 50% { text-shadow: 0 0 28px rgba(255, 106, 26, 0.85), 0 0 90px rgba(255, 106, 26, 0.35); } }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="embers" aria-hidden="true"></canvas>
+<main id="app">
+  <div class="eyebrow">Countdown until <b>doom</b></div>
+  <h1 id="headline">417 Exam 1</h1>
+  <div class="clock" role="timer" aria-live="off">
+    <div class="unit"><div class="num" id="d">00</div><div class="label">days</div></div>
+    <div class="unit"><div class="num" id="h">00</div><div class="label">hours</div></div>
+    <div class="unit"><div class="num" id="m">00</div><div class="label">min</div></div>
+    <div class="unit secs"><div class="num" id="s">00</div><div class="label">sec</div></div>
+  </div>
+  <div class="bar" aria-hidden="true"><span id="fill"></span></div>
+  <div class="when">
+    <span><strong>Wednesday, Oct 7 · 2:00 PM ET</strong></span>
+    <span class="local" id="local"></span>
+  </div>
+</main>
+
+<script>
+  // Fixed instant: Wed Oct 7 2026, 2:00 PM Eastern (EDT, UTC-4). Same moment for every viewer.
+  const TARGET = Date.parse("2026-10-07T14:00:00-04:00");
+  const START = Date.parse("2026-10-05T16:00:00-04:00");
+  const $ = (id) => document.getElementById(id);
+  const pad = (n) => String(n).padStart(2, "0");
+
+  try {
+    const local = new Date(TARGET).toLocaleString(undefined, {
+      weekday: "long", hour: "numeric", minute: "2-digit", timeZoneName: "short"
+    });
+    $("local").textContent = "Your time: " + local;
+  } catch (e) {}
+
+  function tick() {
+    const left = TARGET - Date.now();
+    if (left <= 0) {
+      document.getElementById("app").classList.add("done");
+      $("headline").textContent = "Exam time. Good luck";
+      document.title = "417 Exam 1 · NOW";
+      return;
+    }
+    const s = Math.floor(left / 1000);
+    $("d").textContent = pad(Math.floor(s / 86400));
+    $("h").textContent = pad(Math.floor(s / 3600) % 24);
+    $("m").textContent = pad(Math.floor(s / 60) % 60);
+    $("s").textContent = pad(s % 60);
+    const pct = Math.min(100, Math.max(0, ((Date.now() - START) / (TARGET - START)) * 100));
+    $("fill").style.width = pct + "%";
+    setTimeout(tick, 1000 - (Date.now() % 1000));
+  }
+  tick();
+
+  // Rising embers
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const cv = $("embers"), ctx = cv.getContext("2d");
+  let W, H, parts = [];
+  function size() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function spawn(y) {
+    return { x: Math.random() * W, y: y ?? H + 10, r: Math.random() * 1.8 + 0.5,
+             vy: Math.random() * 0.6 + 0.25, vx: (Math.random() - 0.5) * 0.3,
+             life: Math.random() * 0.6 + 0.4, ph: Math.random() * 6.28 };
+  }
+  size(); window.addEventListener("resize", size);
+  const count = Math.round(Math.min(90, W * H / 14000));
+  for (let i = 0; i < count; i++) parts.push(spawn(Math.random() * H));
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    for (const p of parts) {
+      p.y -= p.vy; p.ph += 0.03; p.x += p.vx + Math.sin(p.ph) * 0.2;
+      if (p.y < -10) Object.assign(p, spawn());
+      const a = p.life * Math.min(1, p.y / H + 0.15);
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283);
+      ctx.fillStyle = `rgba(255, ${120 + Math.floor(p.r * 40)}, 40, ${a})`;
+      ctx.shadowColor = "rgba(255,106,26,0.9)"; ctx.shadowBlur = 8;
+      ctx.fill();
+    }
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+</body>
+</html>
