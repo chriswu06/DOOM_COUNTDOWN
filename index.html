@@ -3,164 +3,427 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Countdown to 417 Exam 1</title>
+<title>417 A3 Countdown</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;900&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@400;700;800&display=swap">
 <style>
-  /* Layout: one furnace-lit screen. Molten digits centered on a smoldering ground, embers rising behind. Single dark theme by choice. */
+  /* Layout: an intercepted-transmission screen. Hex bytes rain behind a glitching headline and a
+     red countdown; below it, a wire diagram of the grading pipeline and a live "sniffer" feed.
+     Intensity escalates with a threat level derived from time left. Single dark theme by choice. */
   :root {
-    --ground: #160807;
-    --ground-2: #2a0d09;
-    --ember: #ff6a1a;
-    --molten: #ffb347;
-    --ash: #c9a89a;
-    --soot: #6e4a40;
-    --display: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    --bg: #05070a;
+    --panel: rgba(10, 14, 20, 0.82);
+    --line: #1c2733;
+    --red: #ff2e3a;
+    --red-dim: #7a1218;
+    --cyan: #2ee6ff;
+    --green: #39ff88;
+    --amber: #ffb020;
+    --text: #c7d2dc;
+    --muted: #5b6b7a;
+    --display: "Chakra Petch", "Arial Narrow", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     color-scheme: dark;
   }
-  html, body { height: 100%; margin: 0; }
+  html, body { min-height: 100%; margin: 0; }
   body {
-    background: radial-gradient(120% 80% at 50% 110%, var(--ground-2), var(--ground) 65%) fixed, var(--ground);
-    color: var(--ash);
+    background: radial-gradient(90% 70% at 50% 0%, #120507, var(--bg) 70%) fixed, var(--bg);
+    color: var(--text);
     font-family: var(--mono);
     overflow-x: hidden;
   }
-  canvas#embers { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  canvas#rain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.55; }
+  /* CRT scanlines + vignette */
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    background:
+      repeating-linear-gradient(to bottom, rgba(0,0,0,0.22) 0 1px, transparent 1px 3px),
+      radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(0,0,0,0.65));
+  }
+  /* Red alarm wash, strength set by threat level */
+  .alarm { position: fixed; inset: 0; pointer-events: none; z-index: 4; background: radial-gradient(80% 80% at 50% 50%, transparent 40%, rgba(255,46,58,0.35)); opacity: 0; }
+
+  .statusbar {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 3;
+    display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; align-items: center;
+    padding: 10px 16px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    background: rgba(5,7,10,0.9); border-bottom: 1px solid var(--line);
+  }
+  .statusbar .grp { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .rec { color: var(--red); font-weight: 700; }
+  .rec::before { content: "●"; margin-right: 6px; }
+  .ok { color: var(--green); }
+  .warn { color: var(--amber); }
+  .bad { color: var(--red); }
+
   main {
     position: relative; z-index: 1;
-    min-height: 100%;
-    box-sizing: border-box;
-    padding-inline: 16px; padding-block: 48px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 28px; text-align: center;
+    max-width: 1080px; margin: 0 auto; box-sizing: border-box;
+    padding: 40px 16px 56px;
+    display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center;
   }
-  .eyebrow {
-    font-size: 0.8rem; letter-spacing: 0.32em; text-transform: uppercase; color: var(--soot);
-  }
-  .eyebrow b { color: var(--ember); font-weight: 600; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+  .eyebrow b { color: var(--cyan); font-weight: 700; }
+
   h1 {
-    margin: 0;
-    font-family: var(--display); font-weight: 900; text-transform: uppercase;
-    font-size: clamp(2.6rem, 9vw, 6rem); line-height: 0.9; letter-spacing: 0.01em;
-    color: var(--molten);
-    text-wrap: balance;
+    position: relative; margin: 0;
+    font-family: var(--display); font-weight: 700; text-transform: uppercase;
+    font-size: clamp(3.2rem, 13vw, 8.5rem); line-height: 0.85; letter-spacing: 0.02em;
+    color: #fff;
+    text-shadow: 0 0 24px rgba(255,46,58,0.55);
   }
+  h1::before, h1::after {
+    content: attr(data-text); position: absolute; inset: 0; pointer-events: none;
+  }
+  h1::before { color: var(--cyan); transform: translate(-3px, 0); mix-blend-mode: screen; opacity: 0.7; clip-path: inset(0 0 60% 0); }
+  h1::after  { color: var(--red);  transform: translate(3px, 0);  mix-blend-mode: screen; opacity: 0.8; clip-path: inset(55% 0 0 0); }
+  .sub { margin: -10px 0 0; font-size: clamp(0.85rem, 2.4vw, 1.05rem); color: var(--text); }
+  .sub code { color: var(--cyan); }
+
   .clock {
-    display: grid; grid-template-columns: repeat(4, auto); gap: clamp(8px, 3vw, 40px);
-    align-items: end; justify-content: center;
-    font-variant-numeric: tabular-nums;
+    display: grid; grid-template-columns: repeat(4, auto); gap: clamp(6px, 2.5vw, 34px);
+    align-items: end; justify-content: center; font-variant-numeric: tabular-nums;
   }
-  .unit { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+  .unit { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
   .num {
-    font-family: var(--display); font-weight: 900;
-    font-size: clamp(3.6rem, 16vw, 11rem); line-height: 0.85;
-    color: var(--molten);
-    text-shadow: 0 0 18px rgba(255, 106, 26, 0.55), 0 0 60px rgba(255, 106, 26, 0.25);
+    font-family: var(--mono); font-weight: 800;
+    font-size: clamp(3rem, 14vw, 9rem); line-height: 0.85;
+    color: var(--red);
+    text-shadow: 0 0 16px rgba(255,46,58,0.65), 0 0 60px rgba(255,46,58,0.3);
+    padding: 10px clamp(6px, 1.5vw, 16px);
+    border: 1px solid var(--red-dim); background: rgba(255,46,58,0.05);
   }
-  .unit.secs .num { color: var(--ember); }
-  .label { font-size: 0.72rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--soot); }
-  .when {
-    display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; line-height: 1.5;
+  .unit.secs .num { color: #fff; }
+  .label { font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+  .sep { font-family: var(--mono); font-weight: 800; color: var(--red-dim); font-size: clamp(2rem, 8vw, 6rem); align-self: center; padding-bottom: 24px; }
+
+  .when { display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; line-height: 1.5; }
+  .when strong { color: #fff; }
+  .when .local { color: var(--muted); font-size: 0.78rem; }
+
+  .xfer { width: min(640px, 100%); display: flex; flex-direction: column; gap: 6px; font-size: 0.7rem; color: var(--muted); text-align: left; }
+  .xfer .row { display: flex; justify-content: space-between; gap: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .bar { height: 10px; border: 1px solid var(--line); background: repeating-linear-gradient(90deg, transparent 0 9px, rgba(28,39,51,0.9) 9px 10px); }
+  .bar span { display: block; height: 100%; width: 0%; background: repeating-linear-gradient(-45deg, var(--red) 0 6px, #b8141e 6px 12px); box-shadow: 0 0 14px rgba(255,46,58,0.7); }
+
+  .threat {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 14px; border: 1px solid currentColor;
+    font-family: var(--display); font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; font-size: 0.85rem;
+    background: repeating-linear-gradient(-45deg, rgba(255,255,255,0.04) 0 8px, transparent 8px 16px);
   }
-  .when strong { color: var(--ash); font-weight: 600; }
-  .when .local { color: var(--soot); font-size: 0.8rem; }
-  .bar { width: min(560px, 100%); height: 4px; background: rgba(110, 74, 64, 0.35); border-radius: 2px; overflow: hidden; }
-  .bar span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--ember), var(--molten)); box-shadow: 0 0 12px var(--ember); }
-  .done .clock, .done .bar { display: none; }
-  @media (max-width: 420px) {
-    .clock { grid-template-columns: repeat(2, auto); row-gap: 20px; }
+
+  .grid {
+    width: 100%; display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; text-align: left; margin-top: 8px;
   }
+  .panel { background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+  .panel header {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 8px 12px; border-bottom: 1px solid var(--line);
+    font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  }
+  .panel header b { color: var(--text); font-weight: 700; }
+  .wire { padding: 14px 10px 6px; }
+  .wire svg { display: block; width: 100%; height: auto; }
+  .wire .caption { padding: 4px 6px 10px; font-size: 0.74rem; color: var(--muted); line-height: 1.5; }
+  .wire .caption b { color: var(--amber); font-weight: 700; }
+
+  .term { height: 300px; overflow: hidden; padding: 10px 12px; font-size: 0.74rem; line-height: 1.55; display: flex; flex-direction: column; justify-content: flex-end; }
+  .term div { white-space: pre-wrap; word-break: break-all; }
+  .t-cmd { color: var(--cyan); }
+  .t-hex { color: var(--muted); }
+  .t-ok { color: var(--green); }
+  .t-warn { color: var(--amber); }
+  .t-bad { color: var(--red); }
+  .t-txt { color: var(--text); }
+  .cursor::after { content: "▌"; color: var(--green); }
+
+  .rules { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: left; }
+  .rule { border: 1px solid var(--line); border-left: 3px solid var(--red); background: var(--panel); padding: 10px 12px; font-size: 0.74rem; line-height: 1.5; }
+  .rule b { display: block; color: #fff; font-family: var(--display); letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 2px; }
+
+  .done .clock, .done .xfer, .done .sep { display: none; }
+
+  @media (max-width: 820px) {
+    .grid { grid-template-columns: 1fr; }
+    .rules { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 460px) {
+    .clock { grid-template-columns: repeat(2, auto); row-gap: 18px; }
+    .sep { display: none; }
+    .rules { grid-template-columns: 1fr; }
+    .term { height: 260px; }
+  }
+
   @media (prefers-reduced-motion: no-preference) {
-    .unit.secs .num { animation: throb 1s ease-in-out infinite; }
-    @keyframes throb { 50% { text-shadow: 0 0 28px rgba(255, 106, 26, 0.85), 0 0 90px rgba(255, 106, 26, 0.35); } }
+    h1::before { animation: glitchA 2.6s steps(1) infinite; }
+    h1::after  { animation: glitchB 3.1s steps(1) infinite; }
+    @keyframes glitchA {
+      0%, 88%, 100% { clip-path: inset(0 0 60% 0); transform: translate(-3px, 0); }
+      90% { clip-path: inset(20% 0 55% 0); transform: translate(-10px, -2px); }
+      93% { clip-path: inset(70% 0 5% 0);  transform: translate(8px, 1px); }
+      96% { clip-path: inset(40% 0 35% 0); transform: translate(-5px, 0); }
+    }
+    @keyframes glitchB {
+      0%, 84%, 100% { clip-path: inset(55% 0 0 0); transform: translate(3px, 0); }
+      86% { clip-path: inset(10% 0 75% 0); transform: translate(12px, 2px); }
+      90% { clip-path: inset(60% 0 20% 0); transform: translate(-9px, 0); }
+      94% { clip-path: inset(30% 0 50% 0); transform: translate(6px, -1px); }
+    }
+    .unit.secs .num { animation: tick 1s steps(1) infinite; }
+    @keyframes tick { 50% { border-color: var(--red); box-shadow: 0 0 22px rgba(255,46,58,0.45) inset; } }
+    .rec::before { animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .flow { animation: flow 1.2s linear infinite; }
+    @keyframes flow { to { stroke-dashoffset: -24; } }
+    .alarm { animation: alarm var(--alarm-speed, 4s) ease-in-out infinite; }
+    @keyframes alarm { 50% { opacity: var(--alarm-peak, 0); } }
+    .lvl-meltdown main { animation: shake 0.35s infinite; }
+    @keyframes shake { 25% { transform: translate(1px, -1px); } 50% { transform: translate(-1px, 1px); } 75% { transform: translate(1px, 1px); } }
   }
 </style>
 </head>
 <body>
 
-<canvas id="embers" aria-hidden="true"></canvas>
+<canvas id="rain" aria-hidden="true"></canvas>
+<div class="alarm" aria-hidden="true"></div>
+
+<div class="statusbar">
+  <div class="grp">
+    <span class="rec">Capturing</span>
+    <span>iface: docker0</span>
+    <span>filter: tcp port 417</span>
+  </div>
+  <div class="grp">
+    <span>ref server: <span class="ok">reachable</span></span>
+    <span>rserver: <span class="warn" id="rs">compiling…</span></span>
+    <span id="pkts">0 pkts</span>
+  </div>
+</div>
+
 <main id="app">
-  <div class="eyebrow">Countdown until <b>doom</b></div>
-  <h1 id="headline">417 Exam 1</h1>
+  <div class="eyebrow">CMSC417 · intercepted · <b>protocol unknown</b></div>
+  <h1 id="headline" data-text="417 A3">417 A3</h1>
+  <p class="sub" id="sub">Reverse-engineer the chat server. Byte for byte. <code>diff</code> is the judge.</p>
+
+  <div class="threat" id="threat">Threat level: —</div>
+
   <div class="clock" role="timer" aria-live="off">
     <div class="unit"><div class="num" id="d">00</div><div class="label">days</div></div>
     <div class="unit"><div class="num" id="h">00</div><div class="label">hours</div></div>
     <div class="unit"><div class="num" id="m">00</div><div class="label">min</div></div>
     <div class="unit secs"><div class="num" id="s">00</div><div class="label">sec</div></div>
   </div>
-  <div class="bar" aria-hidden="true"><span id="fill"></span></div>
+
+  <div class="xfer" aria-hidden="true">
+    <div class="row"><span>Time consumed</span><span id="pct">0.000%</span></div>
+    <div class="bar"><span id="fill"></span></div>
+    <div class="row"><span id="seq">seq=0x00000000</span><span>last commit before deadline = submission</span></div>
+  </div>
+
   <div class="when">
-    <span><strong>Wednesday, Oct 7 · 2:00 PM ET</strong></span>
+    <span><strong>Friday, Oct 23 · 11:59 PM ET</strong></span>
     <span class="local" id="local"></span>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <header><b>Grading pipeline</b><span>same stdin → diff</span></header>
+      <div class="wire">
+        <svg viewBox="0 0 520 230" role="img" aria-label="The reference client sends identical input to the reference server and to your rserver; the two outputs are diffed.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#5b6b7a"/>
+            </marker>
+          </defs>
+          <g font-family="JetBrains Mono, monospace" font-size="12" text-anchor="middle">
+            <!-- stdin -->
+            <rect x="8" y="92" width="92" height="46" fill="none" stroke="#1c2733"/>
+            <text x="54" y="112" fill="#5b6b7a" font-size="10">input.txt</text>
+            <text x="54" y="128" fill="#c7d2dc">stdin</text>
+            <!-- client -->
+            <line x1="100" y1="115" x2="140" y2="115" stroke="#5b6b7a" marker-end="url(#ah)"/>
+            <rect x="142" y="88" width="96" height="54" fill="rgba(46,230,255,0.06)" stroke="#2ee6ff"/>
+            <text x="190" y="110" fill="#2ee6ff" font-size="10">ref</text>
+            <text x="190" y="128" fill="#fff">client</text>
+            <!-- two branches -->
+            <path class="flow" d="M238 105 C 270 105, 270 45, 300 45" fill="none" stroke="#39ff88" stroke-dasharray="6 6" stroke-width="1.5"/>
+            <path class="flow" d="M238 125 C 270 125, 270 185, 300 185" fill="none" stroke="#ff2e3a" stroke-dasharray="6 6" stroke-width="1.5"/>
+            <rect x="300" y="20" width="110" height="50" fill="rgba(57,255,136,0.06)" stroke="#39ff88"/>
+            <text x="355" y="41" fill="#39ff88" font-size="10">reference</text>
+            <text x="355" y="58" fill="#fff">server</text>
+            <rect x="300" y="160" width="110" height="50" fill="rgba(255,46,58,0.08)" stroke="#ff2e3a"/>
+            <text x="355" y="181" fill="#ff2e3a" font-size="10">yours</text>
+            <text x="355" y="198" fill="#fff">./rserver</text>
+            <!-- diff -->
+            <path d="M410 45 C 440 45, 440 108, 452 108" fill="none" stroke="#5b6b7a" marker-end="url(#ah)"/>
+            <path d="M410 185 C 440 185, 440 122, 452 122" fill="none" stroke="#5b6b7a" marker-end="url(#ah)"/>
+            <rect x="454" y="92" width="58" height="46" fill="rgba(255,176,32,0.08)" stroke="#ffb020"/>
+            <text x="483" y="120" fill="#ffb020" font-weight="700">diff</text>
+            <text x="355" y="104" fill="#5b6b7a" font-size="22" font-weight="700">?</text>
+          </g>
+        </svg>
+        <div class="caption">One extra space and the lines differ. <b>Client instead of server: −20 pts.</b></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header><b>sniffer</b><span id="clock2">--:--:--</span></header>
+      <div class="term" id="term" aria-hidden="true"></div>
+    </section>
+  </div>
+
+  <div class="rules">
+    <div class="rule"><b>-Wall clean</b>One warning and it doesn't get graded at all.</div>
+    <div class="rule"><b>Docker or bust</b>If it doesn't compile in the Docker setup, it doesn't count.</div>
+    <div class="rule"><b>make → rserver</b>Built in the repo root. <code>-p &lt;port&gt;</code> required.</div>
+    <div class="rule"><b>origin/main</b>Your last push before 11:59 PM is final.</div>
   </div>
 </main>
 
 <script>
-  // Fixed instant: Wed Oct 7 2026, 2:00 PM Eastern (EDT, UTC-4). Same moment for every viewer.
-  const TARGET = Date.parse("2026-10-07T14:00:00-04:00");
-  const START = Date.parse("2026-10-05T16:00:00-04:00");
+  // Fixed instant: Fri Oct 23 2026, 11:59 PM Eastern (EDT, UTC-4). Same moment for every viewer.
+  const TARGET = Date.parse("2026-10-23T23:59:00-04:00");
+  const START = Date.parse("2026-10-09T00:00:00-04:00");
   const $ = (id) => document.getElementById(id);
   const pad = (n) => String(n).padStart(2, "0");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   try {
     const local = new Date(TARGET).toLocaleString(undefined, {
-      weekday: "long", hour: "numeric", minute: "2-digit", timeZoneName: "short"
+      weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short"
     });
     $("local").textContent = "Your time: " + local;
   } catch (e) {}
 
+  // Threat levels escalate as the deadline closes in.
+  const LEVELS = [
+    { min: 7 * 86400e3, name: "nominal",   label: "Threat level: nominal",  color: "var(--green)", peak: 0,    speed: "6s", rs: ["compiling…", "warn"] },
+    { min: 3 * 86400e3, name: "elevated",  label: "Threat level: elevated", color: "var(--amber)", peak: 0.25, speed: "4s", rs: ["segfault", "warn"] },
+    { min: 1 * 86400e3, name: "critical",  label: "Threat level: critical", color: "var(--red)",   peak: 0.5,  speed: "2s", rs: ["diff ≠ 0", "bad"] },
+    { min: 0,           name: "meltdown",  label: "⚠ Meltdown · push now ⚠", color: "var(--red)",  peak: 0.85, speed: "0.9s", rs: ["PUSH IT", "bad"] },
+  ];
+  let level = null;
+  function setLevel(left) {
+    const L = LEVELS.find((l) => left >= l.min) || LEVELS[LEVELS.length - 1];
+    if (L === level) return;
+    level = L;
+    document.body.className = "lvl-" + L.name;
+    const t = $("threat"); t.textContent = L.label; t.style.color = L.color;
+    document.documentElement.style.setProperty("--alarm-peak", L.peak);
+    document.documentElement.style.setProperty("--alarm-speed", L.speed);
+    $("rs").textContent = L.rs[0]; $("rs").className = L.rs[1];
+  }
+
   function tick() {
-    const left = TARGET - Date.now();
+    const now = Date.now(), left = TARGET - now;
+    $("clock2").textContent = new Date(now).toLocaleTimeString([], { hour12: false });
     if (left <= 0) {
-      document.getElementById("app").classList.add("done");
-      $("headline").textContent = "Exam time. Good luck";
-      document.title = "417 Exam 1 · NOW";
+      $("app").classList.add("done");
+      $("headline").textContent = "Submitted?";
+      $("headline").dataset.text = "Submitted?";
+      $("sub").textContent = "Connection closed by remote host. Whatever is on origin/main is what gets graded.";
+      document.title = "417 A3 · Closed";
+      setLevel(0);
       return;
     }
+    setLevel(left);
     const s = Math.floor(left / 1000);
     $("d").textContent = pad(Math.floor(s / 86400));
     $("h").textContent = pad(Math.floor(s / 3600) % 24);
     $("m").textContent = pad(Math.floor(s / 60) % 60);
     $("s").textContent = pad(s % 60);
-    const pct = Math.min(100, Math.max(0, ((Date.now() - START) / (TARGET - START)) * 100));
+    const pct = Math.min(100, Math.max(0, ((now - START) / (TARGET - START)) * 100));
     $("fill").style.width = pct + "%";
+    $("pct").textContent = pct.toFixed(3) + "%";
+    $("seq").textContent = "seq=0x" + (s >>> 0).toString(16).padStart(8, "0");
+    document.title = `${pad(Math.floor(s / 86400))}d ${pad(Math.floor(s / 3600) % 24)}h · 417 A3`;
     setTimeout(tick, 1000 - (Date.now() % 1000));
   }
   tick();
 
-  // Rising embers
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const cv = $("embers"), ctx = cv.getContext("2d");
-  let W, H, parts = [];
+  // Sniffer feed: a scripted session that loops forever.
+  const hex = (n) => Array.from({ length: n }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, "0")).join(" ");
+  const SCRIPT = [
+    ["t-cmd", "$ make"],
+    ["t-ok",  "gcc -Wall -o rserver rserver.c"],
+    ["t-cmd", "$ ./rserver -p 4170 &"],
+    ["t-cmd", "$ ./client -p 4170 < input.txt > mine.out"],
+    ["t-txt", "> \\connect 127.0.0.1:4170"],
+    ["t-hex", () => "<< " + hex(12)],
+    ["t-txt", "> \\nick packetgoblin"],
+    ["t-hex", () => ">> 04 17 " + hex(10)],
+    ["t-warn","?? opcode 0x" + "9a" + " (no idea what this is)"],
+    ["t-txt", "> \\join lobby hunter2"],
+    ["t-hex", () => "<< " + hex(16)],
+    ["t-txt", "> \\list rooms"],
+    ["t-txt", "> \\msg alice did you figure out the length field"],
+    ["t-hex", () => ">> " + hex(14)],
+    ["t-txt", "> \\leave"],
+    ["t-cmd", "$ diff ref.out mine.out"],
+    ["t-bad", "3c3"],
+    ["t-bad", "< [lobby] packetgoblin: hi"],
+    ["t-bad", "---"],
+    ["t-bad", "> [lobby] packetgoblin:hi"],
+    ["t-warn","// one space. ONE SPACE."],
+    ["t-cmd", "$ git commit -am \"fix whitespace (pls)\" && git push"],
+    ["t-ok",  "To origin  main -> main"],
+    ["t-txt", "> \\quit"],
+    ["t-hex", () => "<< FIN " + hex(6)],
+    ["t-warn","rerunning tests…"],
+  ];
+  const term = $("term"), MAX = 22;
+  let i = 0, pkts = 0;
+  function push() {
+    const [cls, txt] = SCRIPT[i % SCRIPT.length];
+    const line = document.createElement("div");
+    line.className = cls;
+    line.textContent = typeof txt === "function" ? txt() : txt;
+    term.querySelector(".cursor")?.classList.remove("cursor");
+    line.classList.add("cursor");
+    term.appendChild(line);
+    while (term.children.length > MAX) term.removeChild(term.firstChild);
+    if (cls === "t-hex") { pkts += 1 + Math.floor(Math.random() * 4); $("pkts").textContent = pkts + " pkts"; }
+    i++;
+  }
+  function feed() {
+    push();
+    const fast = level && (level.name === "critical" || level.name === "meltdown");
+    setTimeout(feed, (fast ? 260 : 520) + Math.random() * (fast ? 300 : 700));
+  }
+  if (reduce) { for (let k = 0; k < MAX; k++) push(); } else feed();
+
+  // Hex rain
+  const cv = $("rain"), ctx = cv.getContext("2d");
+  const COL = 22;
+  let W, H, drops = [];
   function size() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = cv.clientWidth; H = cv.clientHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-  function spawn(y) {
-    return { x: Math.random() * W, y: y ?? H + 10, r: Math.random() * 1.8 + 0.5,
-             vy: Math.random() * 0.6 + 0.25, vx: (Math.random() - 0.5) * 0.3,
-             life: Math.random() * 0.6 + 0.4, ph: Math.random() * 6.28 };
+    drops = Array.from({ length: Math.ceil(W / COL) }, () => Math.random() * -H / 14);
+    ctx.fillStyle = "#05070a"; ctx.fillRect(0, 0, W, H);
   }
   size(); window.addEventListener("resize", size);
-  const count = Math.round(Math.min(90, W * H / 14000));
-  for (let i = 0; i < count; i++) parts.push(spawn(Math.random() * H));
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    for (const p of parts) {
-      p.y -= p.vy; p.ph += 0.03; p.x += p.vx + Math.sin(p.ph) * 0.2;
-      if (p.y < -10) Object.assign(p, spawn());
-      const a = p.life * Math.min(1, p.y / H + 0.15);
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283);
-      ctx.fillStyle = `rgba(255, ${120 + Math.floor(p.r * 40)}, 40, ${a})`;
-      ctx.shadowColor = "rgba(255,106,26,0.9)"; ctx.shadowBlur = 8;
-      ctx.fill();
+  let last = 0;
+  function rain(t) {
+    const fast = level && level.name === "meltdown";
+    if (t - last > (fast ? 40 : 70)) {
+      last = t;
+      ctx.fillStyle = "rgba(5,7,10,0.14)"; ctx.fillRect(0, 0, W, H);
+      ctx.font = "12px JetBrains Mono, monospace";
+      for (let c = 0; c < drops.length; c++) {
+        const y = drops[c] * 16;
+        ctx.fillStyle = Math.random() < 0.04 ? "#ff2e3a" : "rgba(122,18,24,0.9)";
+        if (Math.random() < 0.02) ctx.fillStyle = "#2ee6ff";
+        ctx.fillText(Math.floor(Math.random() * 256).toString(16).padStart(2, "0"), c * COL + 2, y);
+        if (y > H && Math.random() > 0.975) drops[c] = 0; else drops[c]++;
+      }
     }
-    if (!reduce) requestAnimationFrame(draw);
+    if (!reduce) requestAnimationFrame(rain);
   }
-  draw();
+  if (reduce) { for (let k = 0; k < 60; k++) rain(k * 100); } else requestAnimationFrame(rain);
 </script>
 </body>
 </html>
