@@ -6,147 +6,145 @@
 <title>417 A4 Countdown</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=JetBrains+Mono:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=IM+Fell+English:ital@0;1&display=swap">
 <style>
-  /* Layout: a Chord node's console. A slowly rotating ring of nodes (with literal chords for fingers)
-     sits behind a glitching headline and a red countdown; below it, a toy ring that animates lookups
-     hop by hop, and a live stdin/stdout feed. Intensity escalates as the ring "loses health" with
-     time left. Single dark theme by choice. */
+  /* Layout: a midnight study. The Chord ring is drawn as a summoning circle (32 stars, finger chords
+     forming the sigil, a rune band turning against it) that inks itself in on load and keeps turning
+     behind a gold-leaf headline and countdown. Below: a scrying circle that animates lookups hop by hop,
+     and a grimoire of stdin/stdout. The wards weaken as time runs out; at the end the gold turns to ember.
+     Single dark theme by choice. */
   :root {
-    --bg: #05070a;
-    --panel: rgba(10, 14, 20, 0.82);
-    --line: #1c2733;
-    --red: #ff2e3a;
-    --red-dim: #7a1218;
-    --cyan: #2ee6ff;
-    --green: #39ff88;
-    --amber: #ffb020;
-    --text: #c7d2dc;
-    --muted: #5b6b7a;
-    --display: "Chakra Petch", "Arial Narrow", sans-serif;
-    --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    --night: #0d0b24;
+    --panel: rgba(22, 18, 52, 0.8);
+    --line: rgba(217, 180, 90, 0.22);
+    --gold: #d9b45a;
+    --star: #f3e6b8;
+    --teal: #7fe0d0;
+    --amber: #e9a84a;
+    --ember: #e2553b;
+    --text: #d8d0ee;
+    --muted: #8a82b8;
+    --display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --serif: "IM Fell English", "Iowan Old Style", Georgia, serif;
     color-scheme: dark;
   }
   html, body { min-height: 100%; margin: 0; }
   body {
-    background: radial-gradient(90% 70% at 50% 0%, #120507, var(--bg) 70%) fixed, var(--bg);
+    background:
+      radial-gradient(70% 55% at 50% 42%, #1d1745, transparent 70%) fixed,
+      radial-gradient(120% 90% at 50% 110%, #1a0f2e, transparent 60%) fixed,
+      var(--night);
     color: var(--text);
-    font-family: var(--mono);
+    font-family: var(--serif);
+    font-size: 18px;
     overflow-x: hidden;
   }
-  canvas#ring { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.5; }
-  /* CRT scanlines + vignette */
+  canvas#ring { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.75; }
+  /* Vignette, like the edges of a candlelit room */
   body::after {
     content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 5;
-    background:
-      repeating-linear-gradient(to bottom, rgba(0,0,0,0.22) 0 1px, transparent 1px 3px),
-      radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(0,0,0,0.65));
+    background: radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(5,3,15,0.7));
   }
-  /* Red alarm wash, strength set by ring health */
-  .alarm { position: fixed; inset: 0; pointer-events: none; z-index: 4; background: radial-gradient(80% 80% at 50% 50%, transparent 40%, rgba(255,46,58,0.35)); opacity: 0; }
+  /* Ember wash, strength set by the wards */
+  .alarm { position: fixed; inset: 0; pointer-events: none; z-index: 4; background: radial-gradient(80% 80% at 50% 50%, transparent 40%, rgba(226,85,59,0.32)); opacity: 0; }
 
   .statusbar {
     position: sticky; top: env(safe-area-inset-top, 0px); z-index: 3;
-    display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; align-items: center;
-    padding: 10px 16px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
-    background: rgba(5,7,10,0.9); border-bottom: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 4px 20px; justify-content: space-between; align-items: center;
+    padding: 9px 18px; font-size: 0.86rem; font-style: italic; color: var(--muted);
+    background: rgba(13,11,36,0.88); border-bottom: 1px solid var(--line);
   }
-  .statusbar .grp { display: flex; flex-wrap: wrap; gap: 6px 18px; }
-  .rec { color: var(--red); font-weight: 700; }
-  .rec::before { content: "●"; margin-right: 6px; }
-  .ok { color: var(--green); }
+  .statusbar .grp { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+  .rec { color: var(--gold); }
+  .rec::before { content: "✦"; margin-right: 7px; font-style: normal; }
+  .ok { color: var(--teal); }
   .warn { color: var(--amber); }
-  .bad { color: var(--red); }
+  .bad { color: var(--ember); }
 
   main {
     position: relative; z-index: 1;
     max-width: 1080px; margin: 0 auto; box-sizing: border-box;
-    padding: 40px 16px 56px;
-    display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center;
+    padding: 44px 16px 64px;
+    display: flex; flex-direction: column; align-items: center; gap: 26px; text-align: center;
   }
-  .eyebrow { font-size: 0.78rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
-  .eyebrow b { color: var(--cyan); font-weight: 700; }
+  .eyebrow { font-size: 1rem; font-style: italic; color: var(--muted); }
 
   h1 {
-    position: relative; margin: 0;
-    font-family: var(--display); font-weight: 700; text-transform: uppercase;
-    font-size: clamp(3.2rem, 13vw, 8.5rem); line-height: 0.85; letter-spacing: 0.02em;
-    color: #fff;
-    text-shadow: 0 0 24px rgba(255,46,58,0.55);
+    margin: 0;
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(3.4rem, 14vw, 9rem); line-height: 0.9; letter-spacing: 0.04em;
+    background: linear-gradient(100deg, #9a7632 0%, var(--star) 42%, var(--gold) 58%, #8a6a2c 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 22px rgba(217,180,90,0.35));
   }
-  h1::before, h1::after {
-    content: attr(data-text); position: absolute; inset: 0; pointer-events: none;
-  }
-  h1::before { color: var(--cyan); transform: translate(-3px, 0); mix-blend-mode: screen; opacity: 0.7; clip-path: inset(0 0 60% 0); }
-  h1::after  { color: var(--red);  transform: translate(3px, 0);  mix-blend-mode: screen; opacity: 0.8; clip-path: inset(55% 0 0 0); }
-  .sub { margin: -10px 0 0; font-size: clamp(0.85rem, 2.4vw, 1.05rem); color: var(--text); }
-  .sub code { color: var(--cyan); }
+  .sub { margin: -8px 0 0; font-size: clamp(1.05rem, 2.6vw, 1.3rem); line-height: 1.5; color: var(--text); }
 
   .clock {
-    display: grid; grid-template-columns: repeat(4, auto); gap: clamp(6px, 2.5vw, 34px);
-    align-items: end; justify-content: center; font-variant-numeric: tabular-nums;
+    display: grid; grid-template-columns: repeat(4, auto); gap: clamp(10px, 3.5vw, 48px);
+    align-items: end; justify-content: center; font-variant-numeric: tabular-nums lining-nums;
   }
-  .unit { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+  .unit { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
   .num {
-    font-family: var(--mono); font-weight: 800;
-    font-size: clamp(3rem, 14vw, 9rem); line-height: 0.85;
-    color: var(--red);
-    text-shadow: 0 0 16px rgba(255,46,58,0.65), 0 0 60px rgba(255,46,58,0.3);
-    padding: 10px clamp(6px, 1.5vw, 16px);
-    border: 1px solid var(--red-dim); background: rgba(255,46,58,0.05);
+    font-family: var(--display); font-weight: 600;
+    font-size: clamp(3rem, 13vw, 8rem); line-height: 1;
+    color: var(--gold);
+    text-shadow: 0 0 18px rgba(217,180,90,0.45), 0 0 70px rgba(217,180,90,0.18);
+    transition: color 1.5s;
   }
-  .unit.secs .num { color: #fff; }
-  .label { font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+  .unit.secs .num { color: var(--star); }
+  .lvl-critical .num, .lvl-meltdown .num { color: var(--ember); text-shadow: 0 0 18px rgba(226,85,59,0.55), 0 0 70px rgba(226,85,59,0.25); }
+  .label { font-size: 1rem; font-style: italic; color: var(--muted); }
 
-  .when { display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; line-height: 1.5; }
-  .when strong { color: #fff; }
-  .when .local { color: var(--muted); font-size: 0.78rem; }
+  .when { display: flex; flex-direction: column; gap: 2px; font-size: 1.05rem; line-height: 1.5; }
+  .when strong { color: var(--star); font-weight: 400; }
+  .when .local { color: var(--muted); font-size: 0.92rem; font-style: italic; }
 
-  .xfer { width: min(640px, 100%); display: flex; flex-direction: column; gap: 6px; font-size: 0.7rem; color: var(--muted); text-align: left; }
-  .xfer .row { display: flex; justify-content: space-between; gap: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
-  .bar { height: 10px; border: 1px solid var(--line); background: repeating-linear-gradient(90deg, transparent 0 9px, rgba(28,39,51,0.9) 9px 10px); }
-  .bar span { display: block; height: 100%; width: 0%; background: repeating-linear-gradient(-45deg, var(--red) 0 6px, #b8141e 6px 12px); box-shadow: 0 0 14px rgba(255,46,58,0.7); }
+  .xfer { width: min(620px, 100%); display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--muted); text-align: left; }
+  .xfer .row { display: flex; justify-content: space-between; gap: 12px; font-style: italic; }
+  .bar { height: 6px; border-radius: 3px; background: rgba(138,130,184,0.18); overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0%; border-radius: 3px; background: linear-gradient(90deg, #8a6a2c, var(--gold) 70%, var(--star)); box-shadow: 0 0 12px rgba(217,180,90,0.7); }
+  .lvl-critical .bar span, .lvl-meltdown .bar span { background: linear-gradient(90deg, #7a2416, var(--ember) 70%, #ffb59a); }
 
   .threat {
     display: inline-flex; align-items: center; gap: 10px;
-    padding: 8px 14px; border: 1px solid currentColor;
-    font-family: var(--display); font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; font-size: 0.85rem;
-    background: repeating-linear-gradient(-45deg, rgba(255,255,255,0.04) 0 8px, transparent 8px 16px);
+    padding: 6px 18px; border: 1px solid currentColor; border-radius: 999px;
+    font-size: 1.05rem; font-style: italic;
   }
+  .threat::before, .threat::after { content: "✧"; font-style: normal; font-size: 0.8em; }
 
   .grid {
-    width: 100%; display: grid; grid-template-columns: 1fr 1.1fr; gap: 18px; text-align: left; margin-top: 8px;
+    width: 100%; display: grid; grid-template-columns: 1fr 1.1fr; gap: 18px; text-align: left; margin-top: 10px;
   }
-  .panel { background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; min-width: 0; backdrop-filter: blur(3px); }
   .panel header {
-    display: flex; justify-content: space-between; gap: 8px;
-    padding: 8px 12px; border-bottom: 1px solid var(--line);
-    font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+    display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+    padding: 10px 14px; border-bottom: 1px solid var(--line);
+    font-size: 0.88rem; font-style: italic; color: var(--muted);
   }
-  .panel header b { color: var(--text); font-weight: 700; }
+  .panel header b { font-family: var(--display); font-style: normal; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.04em; color: var(--gold); }
   .wire { padding: 10px 10px 6px; }
   .wire svg { display: block; width: 100%; max-width: 360px; height: auto; margin: 0 auto; }
-  .wire .caption { padding: 4px 6px 10px; font-size: 0.74rem; color: var(--muted); line-height: 1.5; }
-  .wire .caption b { color: var(--amber); font-weight: 700; }
-  .wire .live { color: var(--text); min-height: 1.5em; }
-  .wire .live em { font-style: normal; color: var(--cyan); }
+  .wire .caption { padding: 4px 8px 12px; font-size: 0.92rem; color: var(--muted); line-height: 1.55; }
+  .wire .caption b { color: var(--amber); font-weight: 400; }
+  .wire .live { color: var(--text); min-height: 1.55em; }
+  .wire .live em { font-style: italic; color: var(--gold); }
 
-  .term { height: 340px; overflow: hidden; padding: 10px 12px; font-size: 0.74rem; line-height: 1.55; display: flex; flex-direction: column; justify-content: flex-end; }
+  .term { height: 340px; overflow: hidden; padding: 12px 14px; font-size: 0.9rem; line-height: 1.5; display: flex; flex-direction: column; justify-content: flex-end; }
   .term div { white-space: pre-wrap; word-break: break-all; }
-  .t-cmd { color: var(--cyan); }
-  .t-in { color: #fff; }
-  .t-out { color: var(--green); }
-  .t-hex { color: var(--muted); }
-  .t-ok { color: var(--green); }
-  .t-warn { color: var(--amber); }
-  .t-bad { color: var(--red); }
-  .t-txt { color: var(--text); }
-  .cursor::after { content: "▌"; color: var(--green); }
+  .t-cmd { color: var(--gold); }
+  .t-in { color: var(--star); }
+  .t-out { color: var(--teal); }
+  .t-hex { color: #5f578f; font-size: 0.82rem; }
+  .t-ok { color: var(--teal); }
+  .t-warn { color: var(--amber); font-style: italic; }
+  .t-bad { color: var(--ember); }
+  .t-txt { color: var(--text); font-style: italic; }
+  .cursor::after { content: " ✦"; color: var(--gold); }
 
-  .rules { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: left; }
-  .rule { border: 1px solid var(--line); border-left: 3px solid var(--red); background: var(--panel); padding: 10px 12px; font-size: 0.74rem; line-height: 1.5; }
-  .rule b { display: block; color: #fff; font-family: var(--display); letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 2px; }
-  .rule code { color: var(--cyan); }
+  .rules { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: left; }
+  .rule { border: 1px solid var(--line); border-top: 2px solid var(--gold); border-radius: 3px; background: var(--panel); padding: 12px 14px; font-size: 0.92rem; line-height: 1.55; }
+  .rule b { display: block; color: var(--star); font-family: var(--display); font-weight: 600; letter-spacing: 0.03em; font-size: 0.95rem; margin-bottom: 4px; }
+  .rule code, .sub code { font-family: var(--serif); font-style: italic; color: var(--gold); }
 
   .done .clock, .done .xfer { display: none; }
 
@@ -155,34 +153,18 @@
     .rules { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 460px) {
-    .clock { grid-template-columns: repeat(2, auto); row-gap: 18px; }
+    .clock { grid-template-columns: repeat(2, auto); row-gap: 14px; }
     .rules { grid-template-columns: 1fr; }
     .term { height: 280px; }
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    h1::before { animation: glitchA 2.6s steps(1) infinite; }
-    h1::after  { animation: glitchB 3.1s steps(1) infinite; }
-    @keyframes glitchA {
-      0%, 88%, 100% { clip-path: inset(0 0 60% 0); transform: translate(-3px, 0); }
-      90% { clip-path: inset(20% 0 55% 0); transform: translate(-10px, -2px); }
-      93% { clip-path: inset(70% 0 5% 0);  transform: translate(8px, 1px); }
-      96% { clip-path: inset(40% 0 35% 0); transform: translate(-5px, 0); }
-    }
-    @keyframes glitchB {
-      0%, 84%, 100% { clip-path: inset(55% 0 0 0); transform: translate(3px, 0); }
-      86% { clip-path: inset(10% 0 75% 0); transform: translate(12px, 2px); }
-      90% { clip-path: inset(60% 0 20% 0); transform: translate(-9px, 0); }
-      94% { clip-path: inset(30% 0 50% 0); transform: translate(6px, -1px); }
-    }
-    .unit.secs .num { animation: tick 1s steps(1) infinite; }
-    @keyframes tick { 50% { border-color: var(--red); box-shadow: 0 0 22px rgba(255,46,58,0.45) inset; } }
-    .rec::before { animation: blink 1s steps(1) infinite; }
-    @keyframes blink { 50% { opacity: 0; } }
+    .rec::before { animation: twinkle 2.4s ease-in-out infinite; }
+    @keyframes twinkle { 50% { opacity: 0.25; } }
     .alarm { animation: alarm var(--alarm-speed, 4s) ease-in-out infinite; }
     @keyframes alarm { 50% { opacity: var(--alarm-peak, 0); } }
-    .lvl-meltdown main { animation: shake 0.35s infinite; }
-    @keyframes shake { 25% { transform: translate(1px, -1px); } 50% { transform: translate(-1px, 1px); } 75% { transform: translate(1px, 1px); } }
+    .lvl-meltdown main { animation: tremble 0.4s infinite; }
+    @keyframes tremble { 25% { transform: translate(1px, -1px); } 50% { transform: translate(-1px, 1px); } 75% { transform: translate(1px, 1px); } }
   }
 </style>
 </head>
@@ -193,23 +175,23 @@
 
 <div class="statusbar">
   <div class="grp">
-    <span class="rec">Stabilizing</span>
+    <span class="rec">Channeling the ring</span>
     <span>./chord -p 4170</span>
     <span>r = 4</span>
   </div>
   <div class="grp">
-    <span>successor: <span class="ok">alive</span></span>
-    <span>predecessor: <span class="ok" id="rs">alive</span></span>
-    <span id="pkts">0 msgs</span>
+    <span>successor: <span class="ok">bound</span></span>
+    <span>predecessor: <span class="ok" id="rs">bound</span></span>
+    <span id="pkts">0 sendings</span>
   </div>
 </div>
 
 <main id="app">
-  <div class="eyebrow">CMSC417 · distributed hash table · <b>m = 64</b></div>
-  <h1 id="headline" data-text="417 A4">417 A4</h1>
-  <p class="sub" id="sub">Build a Chord node. Join the ring. Don't lose your successor.</p>
+  <div class="eyebrow">CMSC417, the arcana of distributed hash tables, in 64 bits</div>
+  <h1 id="headline">417 A4</h1>
+  <p class="sub" id="sub">Conjure a Chord node. Join the circle. Never lose your successor.</p>
 
-  <div class="threat" id="threat">Ring health: —</div>
+  <div class="threat" id="threat">Reading the wards…</div>
 
   <div class="clock" role="timer" aria-live="off">
     <div class="unit"><div class="num" id="d">00</div><div class="label">days</div></div>
@@ -219,9 +201,9 @@
   </div>
 
   <div class="xfer" aria-hidden="true">
-    <div class="row"><span>Ring traversed</span><span id="pct">0.000%</span></div>
+    <div class="row"><span>Sand fallen through the glass</span><span id="pct">0.000%</span></div>
     <div class="bar"><span id="fill"></span></div>
-    <div class="row"><span id="seq">key=0x0000000000000000</span><span>successor(deadline) = you</span></div>
+    <div class="row"><span id="seq">sigil 0x0000000000000000</span><span>successor(deadline) = you</span></div>
   </div>
 
   <div class="when">
@@ -231,27 +213,27 @@
 
   <div class="grid">
     <section class="panel">
-      <header><b>find_successor</b><span>toy ring · m = 6</span></header>
+      <header><b>find_successor</b><span>a scrying circle, m = 6</span></header>
       <div class="wire">
-        <svg id="toy" viewBox="0 0 320 300" role="img" aria-label="A small Chord ring. A lookup starts at your node and hops along finger-table chords until it reaches the successor of the key."></svg>
+        <svg id="toy" viewBox="0 0 320 300" role="img" aria-label="A small Chord ring drawn as a scrying circle. A lookup starts at your node and hops along finger-table chords until it reaches the successor of the key."></svg>
         <div class="caption">
           <div class="live" id="live">&nbsp;</div>
-          Cyan chords are your fingers. Yours has 64 of them, over 2<sup>64</sup> IDs. <b>Print keys with printKey, not %d.</b>
+          Teal chords are your fingers. Yours has 64 of them, across 2<sup>64</sup> IDs. <b>Print keys with printKey, not %d.</b>
         </div>
       </div>
     </section>
 
     <section class="panel">
-      <header><b>stdin / stdout</b><span id="clock2">--:--:--</span></header>
+      <header><b>The grimoire</b><span>stdin and stdout, <span id="clock2">--:--:--</span></span></header>
       <div class="term" id="term" aria-hidden="true"></div>
     </section>
   </div>
 
   <div class="rules">
-    <div class="rule"><b>Length-prefixed</b>Every <code>ChordMessage</code> goes out behind its size. See <code>struct Message</code> in chord.h.</div>
-    <div class="rule"><b>64-bit IDs</b>SHA-1 of IP + port, truncated with <code>sha1sum_truncated_head</code>.</div>
-    <div class="rule"><b>Deciseconds</b><code>--sp</code>, <code>--ffp</code>, <code>--cpp</code> ∈ [1, 600]. <code>-r</code> ∈ [1, 32].</div>
-    <div class="rule"><b>&gt; in, &lt; out</b>Match the Lookup and PrintState format exactly, down to the space.</div>
+    <div class="rule"><b>Name its length</b>Every <code>ChordMessage</code> goes out behind its size. See <code>struct Message</code> in chord.h.</div>
+    <div class="rule"><b>True names, 64 bits</b>SHA-1 of IP + port, truncated with <code>sha1sum_truncated_head</code>.</div>
+    <div class="rule"><b>Measured in deciseconds</b><code>--sp</code>, <code>--ffp</code>, <code>--cpp</code> ∈ [1, 600]. <code>-r</code> ∈ [1, 32].</div>
+    <div class="rule"><b>&gt; in, &lt; out</b>Speak the Lookup and PrintState formats exactly, down to the space.</div>
   </div>
 </main>
 
@@ -272,10 +254,10 @@
 
   // Ring health degrades as the deadline closes in.
   const LEVELS = [
-    { min: 7 * 86400e3, name: "nominal",   label: "Ring health: stable",      color: "var(--green)", peak: 0,    speed: "6s",   rs: ["alive", "ok"] },
-    { min: 3 * 86400e3, name: "elevated",  label: "Ring health: churning",    color: "var(--amber)", peak: 0.25, speed: "4s",   rs: ["NULL", "warn"] },
-    { min: 1 * 86400e3, name: "critical",  label: "Ring health: partitioned", color: "var(--red)",   peak: 0.5,  speed: "2s",   rs: ["timeout", "bad"] },
-    { min: 0,           name: "meltdown",  label: "⚠ Ring collapse · push now ⚠", color: "var(--red)", peak: 0.85, speed: "0.9s", rs: ["DEAD", "bad"] },
+    { min: 7 * 86400e3, name: "nominal",   label: "The wards hold",            color: "var(--teal)",  peak: 0,    speed: "6s",   rs: ["bound", "ok"] },
+    { min: 3 * 86400e3, name: "elevated",  label: "The wards flicker",         color: "var(--amber)", peak: 0.25, speed: "4s",   rs: ["NULL", "warn"] },
+    { min: 1 * 86400e3, name: "critical",  label: "The wards are breached",    color: "var(--ember)", peak: 0.5,  speed: "2s",   rs: ["silent", "bad"] },
+    { min: 0,           name: "meltdown",  label: "The circle is breaking. Push now.", color: "var(--ember)", peak: 0.85, speed: "0.9s", rs: ["severed", "bad"] },
   ];
   let level = null;
   function setLevel(left) {
@@ -295,9 +277,8 @@
     $("clock2").textContent = new Date(now).toLocaleTimeString([], { hour12: false });
     if (left <= 0) {
       $("app").classList.add("done");
-      $("headline").textContent = "Left the ring";
-      $("headline").dataset.text = "Left the ring";
-      $("sub").textContent = "check_predecessor timed out. Hope your successor list held.";
+      $("headline").textContent = "The circle is closed";
+      $("sub").textContent = "check_predecessor went unanswered. May your successor list hold.";
       document.title = "417 A4 · Closed";
       setLevel(0);
       return;
@@ -313,7 +294,7 @@
     $("pct").textContent = pct.toFixed(3) + "%";
     // Seconds left, smeared across 64 bits so it reads like a node ID.
     const k = (BigInt(s) * 0x9E3779B97F4A7C15n) & 0xFFFFFFFFFFFFFFFFn;
-    $("seq").textContent = "key=0x" + k.toString(16).padStart(16, "0");
+    $("seq").textContent = "sigil 0x" + k.toString(16).padStart(16, "0");
     document.title = `${pad(Math.floor(s / 86400))}d ${pad(Math.floor(s / 3600) % 24)}h · 417 A4`;
     setTimeout(tick, 1000 - (Date.now() % 1000));
   }
@@ -326,17 +307,17 @@
     ["t-cmd", "$ make"],
     ["t-ok",  "gcc -Wall -o chord chord.c hash.c chord.pb-c.c -lprotobuf-c -lcrypto"],
     ["t-cmd", "$ ./chord -p 4171 --ja 128.8.126.63 --jp 4170 --sp 5 --ffp 6 --cpp 7 -r 4"],
-    ["t-txt", "join: FindSuccessorRequest(self.id)"],
+    ["t-txt", "join: sending FindSuccessorRequest(self.id) into the circle"],
     ["t-hex", frame(0x1c)],
     ["t-hex", () => "<< FindSuccessorResponse " + hex(6)],
-    ["t-txt", "stabilize: GetPredecessorRequest → successor"],
+    ["t-txt", "stabilize: asking our successor who stands behind it"],
     ["t-hex", frame(0x08)],
-    ["t-txt", "notify: NotifyRequest"],
+    ["t-txt", "notify: NotifyRequest, so it knows our name"],
     ["t-hex", frame(0x24)],
     ["t-in",  "> Lookup Hello"],
     ["t-out", "< Hello 17870176168342380699"],
     ["t-out", "< 3567812885933644873 128.8.126.63 2001"],
-    ["t-txt", "fix_fingers: next = 37"],
+    ["t-txt", "fix_fingers: rebinding finger 37"],
     ["t-hex", () => "<< FindSuccessorResponse " + hex(8)],
     ["t-in",  "> PrintState"],
     ["t-out", "< Self 3567812885933644873 128.8.126.63 2001"],
@@ -346,13 +327,13 @@
     ["t-out", "< ..."],
     ["t-out", "< Finger [64] 8045897832921729661 128.8.126.63 2002"],
     ["t-txt", "check_predecessor: CheckPredecessorRequest"],
-    ["t-warn","… no response (node 2002 left the ring)"],
-    ["t-bad", "successor dead → GetSuccessorListRequest to Successor [2]"],
+    ["t-warn","… silence. node 2002 has vanished from the circle"],
+    ["t-bad", "successor severed, summoning Successor [2] with GetSuccessorListRequest"],
     ["t-hex", frame(0x5a)],
     ["t-in",  "> Lookup World"],
     ["t-out", "< World 8124633097568820307"],
     ["t-out", "< 9013248200782045821 128.8.126.63 2003"],
-    ["t-warn","// query_id mismatch?? oh. forgot to echo it back."],
+    ["t-warn","// the query_id came back wrong. forgot to echo it. again."],
     ["t-bad", "Segmentation fault (core dumped)"],
     ["t-warn","// protobuf-c length prefix was host byte order. of course."],
     ["t-cmd", "$ git commit -am \"htonl. HTONL.\" && git push"],
@@ -369,7 +350,7 @@
     line.classList.add("cursor");
     term.appendChild(line);
     while (term.children.length > MAX) term.removeChild(term.firstChild);
-    if (cls === "t-hex") { pkts += 1 + Math.floor(Math.random() * 4); $("pkts").textContent = pkts + " msgs"; }
+    if (cls === "t-hex") { pkts += 1 + Math.floor(Math.random() * 4); $("pkts").textContent = pkts + " sendings"; }
     i++;
   }
   function feed() {
@@ -404,21 +385,24 @@
   const el = (tag, attrs, parent = toy) => { const e = document.createElementNS(SVG, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
   const pos = (id, r = R) => { const a = (id / M) * 2 * Math.PI - Math.PI / 2; return [CX + r * Math.cos(a), CY + r * Math.sin(a)]; };
 
-  el("circle", { cx: CX, cy: CY, r: R, fill: "none", stroke: "#1c2733", "stroke-width": 1.5 });
-  for (let t = 0; t < M; t += 4) { const [x1, y1] = pos(t, R - 3), [x2, y2] = pos(t, R + 3); el("line", { x1, y1, x2, y2, stroke: "#1c2733" }); }
+  const C = { gold: "#d9b45a", star: "#f3e6b8", teal: "#7fe0d0", muted: "#8a82b8", night: "#0d0b24", rim: "rgba(217,180,90,0.4)" };
+  const FONT = "IM Fell English, Georgia, serif";
+  el("circle", { cx: CX, cy: CY, r: R + 9, fill: "none", stroke: C.rim, "stroke-width": 0.6 });
+  el("circle", { cx: CX, cy: CY, r: R, fill: "none", stroke: C.rim, "stroke-width": 1.2 });
+  for (let t = 0; t < M; t += 4) { const [x1, y1] = pos(t, R - 3), [x2, y2] = pos(t, R + 3); el("line", { x1, y1, x2, y2, stroke: C.rim }); }
   const fingerSet = new Set(Array.from({ length: BITS }, (_, i) => finger(SELF, i)));
-  for (const f of fingerSet) { const [x1, y1] = pos(SELF), [x2, y2] = pos(f); el("line", { x1, y1, x2, y2, stroke: "#2ee6ff", "stroke-opacity": 0.28, "stroke-dasharray": "3 4" }); }
+  for (const f of fingerSet) { const [x1, y1] = pos(SELF), [x2, y2] = pos(f); el("line", { x1, y1, x2, y2, stroke: C.teal, "stroke-opacity": 0.4, "stroke-dasharray": "2 4" }); }
   const hops = el("g", {});
-  const keyMark = el("path", { d: "M0,-6 L6,0 L0,6 L-6,0 Z", fill: "#ffb020", opacity: 0 });
+  const keyMark = el("path", { d: "M0,-6 L6,0 L0,6 L-6,0 Z", fill: C.star, opacity: 0 });
   const nodeEls = {};
   for (const n of NODES) {
     const [x, y] = pos(n), [lx, ly] = pos(n, R + 18);
-    nodeEls[n] = el("circle", { cx: x, cy: y, r: n === SELF ? 7 : 5.5, fill: n === SELF ? "#2ee6ff" : "#0a0e14", stroke: n === SELF ? "#2ee6ff" : "#5b6b7a", "stroke-width": 1.5 });
-    el("text", { x: lx, y: ly + 4, fill: n === SELF ? "#2ee6ff" : "#5b6b7a", "font-size": 11, "font-family": "JetBrains Mono, monospace", "text-anchor": "middle" }).textContent = n;
+    nodeEls[n] = el("circle", { cx: x, cy: y, r: n === SELF ? 7 : 5.5, fill: n === SELF ? C.gold : C.night, stroke: n === SELF ? C.gold : C.muted, "stroke-width": 1.5 });
+    el("text", { x: lx, y: ly + 4, fill: n === SELF ? C.gold : C.muted, "font-size": 13, "font-family": FONT, "text-anchor": "middle" }).textContent = n;
   }
-  el("text", { x: CX, y: CY - 4, fill: "#5b6b7a", "font-size": 10, "font-family": "JetBrains Mono, monospace", "text-anchor": "middle" }).textContent = "self = " + SELF;
-  const ownerText = el("text", { x: CX, y: CY + 14, fill: "#fff", "font-size": 13, "font-weight": 700, "font-family": "JetBrains Mono, monospace", "text-anchor": "middle" });
-  const dot = el("circle", { r: 4.5, fill: "#ff2e3a", opacity: 0 });
+  el("text", { x: CX, y: CY - 4, fill: C.muted, "font-size": 12, "font-style": "italic", "font-family": FONT, "text-anchor": "middle" }).textContent = "self = " + SELF;
+  const ownerText = el("text", { x: CX, y: CY + 16, fill: C.star, "font-size": 15, "font-family": FONT, "text-anchor": "middle" });
+  const dot = el("circle", { r: 4.5, fill: C.star, opacity: 0, style: "filter: drop-shadow(0 0 4px #d9b45a)" });
 
   // Keys for Hello/World are the spec's 64-bit keys reduced mod 64.
   const JOBS = [
@@ -433,27 +417,27 @@
     const path = route(start, key);
     const owner = path[path.length - 1];
     hops.replaceChildren();
-    for (const n of NODES) nodeEls[n].setAttribute("stroke", n === SELF ? "#2ee6ff" : "#5b6b7a");
+    for (const n of NODES) nodeEls[n].setAttribute("stroke", n === SELF ? C.gold : C.muted);
     const [kx, ky] = pos(key, R);
     keyMark.setAttribute("transform", `translate(${kx},${ky})`); keyMark.setAttribute("opacity", 1);
     ownerText.textContent = "";
     $("live").innerHTML = `<em>${label}</em> → key ${key} → …`;
     const finish = () => {
-      nodeEls[owner].setAttribute("stroke", "#39ff88");
+      nodeEls[owner].setAttribute("stroke", C.teal);
       ownerText.textContent = "owner " + owner;
       const n = path.length - 1;
       $("live").innerHTML = `<em>${label}</em> → key ${key} → node ${owner} · ${n} hop${n === 1 ? "" : "s"}`;
       dot.setAttribute("opacity", 0);
       setTimeout(runJob, reduce ? 3200 : 1600);
     };
-    const drawHop = (a, b) => { const [x1, y1] = pos(a), [x2, y2] = pos(b); el("line", { x1, y1, x2, y2, stroke: "#ff2e3a", "stroke-width": 1.8 }, hops); };
+    const drawHop = (a, b) => { const [x1, y1] = pos(a), [x2, y2] = pos(b); el("line", { x1, y1, x2, y2, stroke: C.gold, "stroke-width": 1.6 }, hops); };
     if (reduce) { for (let h = 1; h < path.length; h++) drawHop(path[h - 1], path[h]); finish(); return; }
     let h = 1;
     const step = () => {
       if (h >= path.length) return finish();
       const [x1, y1] = pos(path[h - 1]), [x2, y2] = pos(path[h]);
       const dur = hot() ? 320 : 600, t0 = performance.now();
-      const line = el("line", { x1, y1, x2: x1, y2: y1, stroke: "#ff2e3a", "stroke-width": 1.8 }, hops);
+      const line = el("line", { x1, y1, x2: x1, y2: y1, stroke: C.gold, "stroke-width": 1.6 }, hops);
       dot.setAttribute("opacity", 1);
       const anim = (t) => {
         const p = Math.min(1, (t - t0) / dur), e = p * (2 - p);
@@ -468,45 +452,84 @@
   }
   runJob();
 
-  // Background: a big rotating Chord ring. Each node draws chords to the nodes 1, 2, 4, 8, 16 places ahead.
+  // Background: the Chord ring as a summoning circle. 32 stars, each drawing chords to the stars
+  // 1, 2, 4, 8, 16 places ahead (their fingers), which is what makes the sigil. A rune band turns the
+  // other way. The whole thing inks itself in once on load; when time runs short the gold turns to ember.
   const cv = $("ring"), ctx = cv.getContext("2d");
   const BN = 32, OFFS = [1, 2, 4, 8, 16];
-  let W, H, pulses = [];
+  const RUNES = "ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ";
+  const NR = 48;
+  let W, H, pulses = [], motes = [], t0 = null;
   function size() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = cv.clientWidth; H = cv.clientHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    motes = Array.from({ length: Math.round((W * H) / 26000) }, () => ({
+      x: Math.random() * W, y: Math.random() * H, v: 0.08 + Math.random() * 0.25, ph: Math.random() * 6.3, s: 0.6 + Math.random() * 1.2,
+    }));
     if (reduce) bg(0);
   }
+  const sparkle = (x, y, s) => {
+    ctx.beginPath(); ctx.moveTo(x, y - s);
+    ctx.quadraticCurveTo(x, y, x + s, y); ctx.quadraticCurveTo(x, y, x, y + s);
+    ctx.quadraticCurveTo(x, y, x - s, y); ctx.quadraticCurveTo(x, y, x, y - s);
+    ctx.fill();
+  };
   function bg(t) {
+    if (t0 === null) t0 = t;
+    const ink = reduce ? 1 : 1 - (1 - Math.min(1, (t - t0) / 2800)) ** 3;
     const melt = level && level.name === "meltdown";
-    const rot = t * (melt ? 0.00006 : 0.000015);
-    const r = Math.min(W, H) * 0.44, cx = W / 2, cy = H * 0.48;
-    const P = (i) => { const a = (i / BN) * 2 * Math.PI + rot; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+    const tone = hot() ? "226,85,59" : "217,180,90";
+    const rot = t * (melt ? 0.00006 : 0.000012);
+    const r = Math.min(W, H) * 0.4, cx = W / 2, cy = H * 0.46;
+    const P = (i, rr = r) => { const a = (i / BN) * 2 * Math.PI + rot - Math.PI / 2; return [cx + rr * Math.cos(a), cy + rr * Math.sin(a)]; };
     ctx.clearRect(0, 0, W, H);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(122,18,24,0.55)";
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.stroke();
-    ctx.strokeStyle = "rgba(122,18,24,0.22)";
-    ctx.beginPath();
-    for (let i = 0; i < BN; i++) for (const o of OFFS) { const [x1, y1] = P(i), [x2, y2] = P(i + o); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
-    ctx.stroke();
-    for (let i = 0; i < BN; i++) {
-      const [x, y] = P(i);
-      ctx.fillStyle = melt && Math.random() < 0.08 ? "#ff2e3a" : "rgba(91,107,122,0.8)";
-      ctx.beginPath(); ctx.arc(x, y, 2.2, 0, 2 * Math.PI); ctx.fill();
+
+    // Drifting motes of light.
+    for (const m of motes) {
+      if (!reduce) { m.y -= m.v; m.x += Math.sin(t * 0.0004 + m.ph) * 0.12; if (m.y < -4) { m.y = H + 4; m.x = Math.random() * W; } }
+      ctx.fillStyle = `rgba(243,230,184,${0.15 + 0.55 * Math.abs(Math.sin(t * 0.0009 + m.ph))})`;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.s, 0, 2 * Math.PI); ctx.fill();
     }
-    // Messages travelling along random chords.
-    if (pulses.length < (hot() ? 10 : 4) && Math.random() < 0.05) {
+
+    // Rings, drawn clockwise as they ink in.
+    const sweep = (rr, a, w) => { ctx.strokeStyle = `rgba(${tone},${a})`; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(cx, cy, rr, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * ink); ctx.stroke(); };
+    sweep(r, 0.55, 1.2); sweep(r * 1.07, 0.3, 0.8); sweep(r * 1.17, 0.22, 0.8); sweep(r * 0.5, 0.18, 0.8);
+
+    // Rune band, turning against the circle.
+    ctx.fillStyle = `rgba(${tone},0.5)`;
+    ctx.font = `${Math.max(11, r * 0.055)}px "Segoe UI Historic", "Noto Sans Runic", "Apple Symbols", serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (let i = 0; i < NR * ink; i++) {
+      const a = (i / NR) * 2 * Math.PI - rot * 1.6 - Math.PI / 2;
+      ctx.save(); ctx.translate(cx + r * 1.12 * Math.cos(a), cy + r * 1.12 * Math.sin(a)); ctx.rotate(a + Math.PI / 2);
+      ctx.fillText(RUNES[i % RUNES.length], 0, 0); ctx.restore();
+    }
+
+    // The sigil: every finger chord.
+    ctx.strokeStyle = `rgba(${tone},0.16)`; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < BN * ink; i++) for (const o of OFFS) { const [x1, y1] = P(i), [x2, y2] = P(i + o); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+    ctx.stroke();
+    for (let i = 0; i < BN * ink; i++) {
+      const [x, y] = P(i);
+      ctx.fillStyle = melt && Math.random() < 0.08 ? "#e2553b" : "rgba(243,230,184,0.85)";
+      sparkle(x, y, 4.5);
+    }
+
+    // Sendings travelling along random chords, with a short tail.
+    if (ink === 1 && pulses.length < (hot() ? 10 : 4) && Math.random() < 0.05) {
       const a = Math.floor(Math.random() * BN);
-      pulses.push({ a, b: a + OFFS[Math.floor(Math.random() * OFFS.length)], p: 0, c: Math.random() < 0.7 ? "#2ee6ff" : "#ff2e3a" });
+      pulses.push({ a, b: a + OFFS[Math.floor(Math.random() * OFFS.length)], p: 0, c: Math.random() < 0.7 ? "127,224,208" : tone });
     }
     pulses = pulses.filter((q) => {
       q.p += hot() ? 0.02 : 0.01;
       const [x1, y1] = P(q.a), [x2, y2] = P(q.b);
-      ctx.fillStyle = q.c; ctx.shadowColor = q.c; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.arc(x1 + (x2 - x1) * q.p, y1 + (y2 - y1) * q.p, 2.6, 0, 2 * Math.PI); ctx.fill();
-      ctx.shadowBlur = 0;
+      for (let k = 5; k >= 0; k--) {
+        const p = Math.max(0, q.p - k * 0.025);
+        ctx.fillStyle = `rgba(${q.c},${k ? 0.5 / k : 1})`;
+        ctx.beginPath(); ctx.arc(x1 + (x2 - x1) * p, y1 + (y2 - y1) * p, k ? 2 : 2.8, 0, 2 * Math.PI); ctx.fill();
+      }
       return q.p < 1;
     });
     if (!reduce) requestAnimationFrame(bg);
